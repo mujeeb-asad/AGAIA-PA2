@@ -8,6 +8,10 @@
 # too. --scale swaps in the batch layout described in SCALED_PARAMETERS below, which is what a 96gb card is for:
 #     modal run --detach train/run_train_modal.py --scale
 #
+# --uf-retry reruns only the ultrafeedback dpo run at a higher learning rate, under its own name. sft and dpo_hh
+# are reused from the volume, so it needs the first run to have finished. combine it with --scale:
+#     modal run --detach train/run_train_modal.py --scale --uf-retry
+#
 # pull the results back afterwards (executed notebook, csvs, pngs, checkpoints):
 #     modal volume get agaia /pa2/train/ ./train/modal_run
 #
@@ -66,9 +70,14 @@ SCALED_PARAMETERS = {
     'REFERENCE_HALF_PRECISION': False, #with 96gb the reference can stay fp32, identical to the policy at step 0
 }
 
+#the first ultrafeedback run picked its final step as best, with validation reward accuracy and margin still rising,
+#and lost to sft in the judged comparison -> under-trained rather than over-fitted. this retry changes only the
+#learning rate, 1e-6 -> 5e-6, so any difference can be put down to that one setting
+UF_RETRY_PARAMETERS = {'DPO_UF_RUN_NAME': 'dpo_uf_lr5e-6', 'DPO_LEARNING_RATE': 5e-6}
+
 
 @app.function(gpu=GPU, cpu=CPU_CORES, memory=MEMORY_MB, timeout=TIMEOUT_SECONDS, volumes={VOLUME_PATH: volume})
-def run(parameters):
+def run(parameters, run_name):
     import logging
 
     import papermill
@@ -80,7 +89,7 @@ def run(parameters):
     volume.reload() #picks up the cached model and datasets, and any run an earlier launch already finished
     Path(REMOTE_TASK_DIR).mkdir(parents=True, exist_ok=True)
 
-    executed = f'{REMOTE_TASK_DIR}/train_executed.ipynb'
+    executed = f'{REMOTE_TASK_DIR}/{run_name}_executed.ipynb' #one per launch, a retry keeps the first run's notebook
     print(f'running train with parameters {parameters or "the notebook defaults"}')
 
     try:
@@ -99,5 +108,9 @@ def run(parameters):
 
 
 @app.local_entrypoint()
-def main(scale: bool = False):
-    run.remote(SCALED_PARAMETERS if scale else SPEC_PARAMETERS)
+def main(scale: bool = False, uf_retry: bool = False):
+    parameters = SCALED_PARAMETERS if scale else SPEC_PARAMETERS
+    if uf_retry:
+        run.remote({**parameters, **UF_RETRY_PARAMETERS}, 'train_dpo_uf_lr5e-6')
+    else:
+        run.remote(parameters, 'train')

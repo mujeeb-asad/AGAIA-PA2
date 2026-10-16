@@ -1,0 +1,13 @@
+{
+  "run": "persona_lr5e-05_rpo1",
+  "learning_rate": 5e-05,
+  "rpo_alpha": 1.0,
+  "steps": 75,
+  "best_step": 70,
+  "best_eval_loss": 3.5886013507843018,
+  "best_eval_reward_accuracy": 1.0,
+  "best_eval_reward_margin": 1.8465824127197266,
+  "final_eval_loss": 3.5889687538146973,
+  "trainable_parameters": 8683520,
+  "seconds": 21.64390277862549
+}

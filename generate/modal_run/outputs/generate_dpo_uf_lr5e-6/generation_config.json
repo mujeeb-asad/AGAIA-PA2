@@ -1,0 +1,15 @@
+{
+  "decoding": "greedy",
+  "temperature": null,
+  "top_p": null,
+  "max_new_tokens": 384,
+  "repetition_penalty": 1.0,
+  "no_repeat_ngram_size": 0,
+  "prompt_template": "### Instruction:\n{instruction}\n\n### Response:\n",
+  "batch_size": 64,
+  "seed": 42,
+  "models": {
+    "sft": "../train/outputs/train/checkpoints/sft_best",
+    "dpo_uf_lr5e-6": "../train/outputs/train/checkpoints/dpo_uf_lr5e-6_best"
+  }
+}

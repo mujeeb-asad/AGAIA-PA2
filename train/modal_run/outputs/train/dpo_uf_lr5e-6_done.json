@@ -1,0 +1,12 @@
+{
+  "run": "dpo_uf_lr5e-6",
+  "steps": 469,
+  "best_step": 200,
+  "best_val_reward_accuracy": 0.6759999990463257,
+  "reference_checkpoint": "outputs/train/checkpoints/sft_best",
+  "learning_rate": 5e-06,
+  "beta": 0.1,
+  "effective_batch": 32,
+  "epochs": 1,
+  "seconds": 1698.441422700882
+}

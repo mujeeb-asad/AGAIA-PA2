@@ -1,0 +1,57 @@
+{
+  "base_model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+  "seed": 42,
+  "train_size": 200,
+  "val_size": 20,
+  "lora": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "dpo": {
+    "trainer": "trl 0.27.2 DPOTrainer",
+    "beta": 0.1,
+    "reference": "base model, adapter disabled",
+    "learning_rates_tried": [
+      1e-05,
+      2e-05,
+      5e-05,
+      0.0001
+    ],
+    "rpo_alphas_tried": [
+      0.0,
+      1.0
+    ],
+    "selected_run": "persona_lr0.0001_rpo1",
+    "selected_learning_rate": 0.0001,
+    "selected_rpo_alpha": 1.0,
+    "checkpoint_within_run": "lowest validation dpo loss",
+    "selection_across_runs": "largest validation reward margin among runs whose validation answers end by themselves >= 90%",
+    "optimizer": "adamw",
+    "schedule": "cosine",
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.0,
+    "max_grad_norm": 1.0,
+    "batch_size": 8,
+    "grad_accum": 1,
+    "epochs": 3,
+    "max_length": 256,
+    "precision": "bf16"
+  },
+  "generation": {
+    "decoding": "greedy",
+    "max_new_tokens": 384,
+    "repetition_penalty": 1.1,
+    "chat_template": "smollm2 default, with its default system turn"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+}

@@ -12,6 +12,10 @@
 # own folder so the main greedy results stay untouched. combine it with --scale:
 #     modal run --detach generate/run_generate_modal.py --scale --penalty
 #
+# --uf-retry answers alpaca eval with the retried ultrafeedback run (dpo_uf_lr5e-6) and sft, under both decodings,
+# each into its own folder. it needs the retry's training run to have finished:
+#     modal run --detach generate/run_generate_modal.py --scale --uf-retry
+#
 # pull the results back afterwards (executed notebook, generation jsons, pair files):
 #     modal volume get agaia /pa2/generate/ ./generate/modal_run
 #
@@ -63,9 +67,14 @@ SCALED_PARAMETERS = {**SPEC_PARAMETERS, 'GEN_BATCH_SIZE': 64}
 #comparison gets the same value, and the separate folder keeps this a labelled ablation next to the main greedy run
 PENALTY_PARAMETERS = {'REPETITION_PENALTY': 1.1, 'OUTPUT_DIR': './outputs/generate_rep1.1'}
 
+#the retried ultrafeedback run against sft on alpaca eval. sft is generated again in each folder rather than copied,
+#greedy decoding makes it identical to the first run's answers, which is also a check of the setup's determinism
+UF_RETRY_PLAN = {'GENERATION_PLAN': [['sft', 'alpaca_eval'], ['dpo_uf_lr5e-6', 'alpaca_eval']],
+                 'PAIR_PLAN': [['dpo_uf_lr5e-6', 'alpaca_eval']]}
+
 
 @app.function(gpu=GPU, cpu=CPU_CORES, memory=MEMORY_MB, timeout=TIMEOUT_SECONDS, volumes={VOLUME_PATH: volume})
-def run(parameters, run_name):
+def run(jobs):
     import logging
 
     import papermill
@@ -77,34 +86,45 @@ def run(parameters, run_name):
     volume.reload() #picks up the checkpoints the training run committed
     Path(REMOTE_TASK_DIR).mkdir(parents=True, exist_ok=True)
 
-    #failing here is much clearer than a missing folder error from inside the notebook
-    checkpoint_dir = f'{VOLUME_PATH}/pa2/train/outputs/train/checkpoints'
-    missing = [name for name in ('sft_best', 'dpo_hh_best', 'dpo_uf_best') if not Path(f'{checkpoint_dir}/{name}').exists()]
-    if missing:
-        raise RuntimeError(f'run the training notebook first, these checkpoints are missing from the volume: {missing}')
+    #(parameters, run name) pairs run one after another in this one container. a detached launch only keeps the
+    #last remote call alive once the local process is gone, so several decodings go into a single call
+    for parameters, run_name in jobs:
+        #failing here is much clearer than a missing folder error from inside the notebook
+        checkpoint_dir = f'{VOLUME_PATH}/pa2/train/outputs/train/checkpoints'
+        plan = parameters.get('GENERATION_PLAN', [['sft'], ['dpo_hh'], ['dpo_uf']])
+        missing = [f'{row[0]}_best' for row in plan if row[0] != 'qwen2.5-0.5b-base'
+                   and not Path(f'{checkpoint_dir}/{row[0]}_best').exists()]
+        if missing:
+            raise RuntimeError(f'run the training notebook first, these checkpoints are missing from the volume: {missing}')
 
-    executed = f'{REMOTE_TASK_DIR}/{run_name}_executed.ipynb' #one per run, the ablation keeps the main run's notebook
-    print(f'running generate with parameters {parameters}')
+        executed = f'{REMOTE_TASK_DIR}/{run_name}_executed.ipynb' #one per run, a later run keeps the earlier notebooks
+        print(f'running {run_name} with parameters {parameters}')
 
-    try:
-        papermill.execute_notebook(
-            '/root/generate.ipynb', executed,
-            parameters=parameters,
-            cwd=REMOTE_TASK_DIR, #relative paths inside the notebook resolve here, on the volume
-            kernel_name='python3',
-            progress_bar=False, #the logs are captured, a progress bar would only add noise to them
-            log_output=True, #every cell's stdout goes to the modal logs, so a detached run is still followable
-        )
-    finally:
-        #committed even when a cell raises, so the partially executed notebook and whatever results exist are kept
-        volume.commit()
-        print(f'results committed to {REMOTE_TASK_DIR}')
+        try:
+            papermill.execute_notebook(
+                '/root/generate.ipynb', executed,
+                parameters=parameters,
+                cwd=REMOTE_TASK_DIR, #relative paths inside the notebook resolve here, on the volume
+                kernel_name='python3',
+                progress_bar=False, #the logs are captured, a progress bar would only add noise to them
+                log_output=True, #every cell's stdout goes to the modal logs, so a detached run is still followable
+            )
+        finally:
+            #committed even when a cell raises, so the partially executed notebook and whatever results exist are kept
+            volume.commit()
+            print(f'results committed to {REMOTE_TASK_DIR}')
 
 
 @app.local_entrypoint()
-def main(scale: bool = False, penalty: bool = False):
+def main(scale: bool = False, penalty: bool = False, uf_retry: bool = False):
     parameters = SCALED_PARAMETERS if scale else SPEC_PARAMETERS
-    if penalty:
-        run.remote({**parameters, **PENALTY_PARAMETERS}, 'generate_rep1.1')
+    if uf_retry:
+        run.remote([
+            ({**parameters, **UF_RETRY_PLAN, 'OUTPUT_DIR': './outputs/generate_dpo_uf_lr5e-6'}, 'generate_dpo_uf_lr5e-6'),
+            ({**parameters, **UF_RETRY_PLAN, 'REPETITION_PENALTY': 1.1,
+              'OUTPUT_DIR': './outputs/generate_rep1.1_dpo_uf_lr5e-6'}, 'generate_rep1.1_dpo_uf_lr5e-6'),
+        ])
+    elif penalty:
+        run.remote([({**parameters, **PENALTY_PARAMETERS}, 'generate_rep1.1')])
     else:
-        run.remote(parameters, 'generate')
+        run.remote([(parameters, 'generate')])

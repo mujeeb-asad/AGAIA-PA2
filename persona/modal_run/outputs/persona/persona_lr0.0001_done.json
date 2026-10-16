@@ -1,0 +1,12 @@
+{
+  "run": "persona_lr0.0001",
+  "learning_rate": 0.0001,
+  "steps": 75,
+  "best_step": 75,
+  "best_eval_loss": 0.011119365692138672,
+  "best_eval_reward_accuracy": 1.0,
+  "best_eval_reward_margin": 5.112881660461426,
+  "final_eval_loss": 0.011119365692138672,
+  "trainable_parameters": 8683520,
+  "seconds": 20.906458139419556
+}

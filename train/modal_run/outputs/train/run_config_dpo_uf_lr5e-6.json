@@ -1,0 +1,45 @@
+{
+  "base_model": "Qwen/Qwen2.5-0.5B",
+  "seed": 42,
+  "max_length": 512,
+  "max_prompt_tokens": 256,
+  "precision": "bf16",
+  "reference_half_precision": false,
+  "gradient_clip_norm": 1.0,
+  "prompt_template": "### Instruction:\n{instruction}\n\n### Response:\n",
+  "gpus": [
+    "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+  ],
+  "sft": {
+    "train_size": 30000,
+    "val_size": 1000,
+    "batch_size": 32,
+    "grad_accum": 1,
+    "effective_batch": 32,
+    "optimizer": "adamw",
+    "learning_rate": 2e-05,
+    "schedule": "linear warmup + cosine decay",
+    "warmup_ratio": 0.03,
+    "weight_decay": 0.1,
+    "epochs": 1,
+    "loss_reduction": "mean over response tokens"
+  },
+  "dpo": {
+    "train_size": 15000,
+    "val_size": 1000,
+    "batch_size": 16,
+    "grad_accum": 2,
+    "effective_batch": 32,
+    "optimizer": "adamw",
+    "learning_rate": 5e-06,
+    "schedule": "constant",
+    "weight_decay": 0.0,
+    "beta": 0.1,
+    "epochs": 1,
+    "reference": "frozen sft_best",
+    "selection": "val reward accuracy"
+  },
+  "trained_in_this_execution": [
+    "dpo_uf_lr5e-6"
+  ]
+}
