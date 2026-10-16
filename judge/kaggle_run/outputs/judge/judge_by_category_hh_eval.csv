@@ -1,4 +1,4 @@
-,greedy,greedy,greedy,rep1.1,rep1.1,rep1.1
+,greedy:dpo_hh,greedy:dpo_hh,greedy:dpo_hh,rep1.1:dpo_hh,rep1.1:dpo_hh,rep1.1:dpo_hh
 ,win,loss,tie,win,loss,tie
 category,,,,,,
 benign_helpfulness,11,18,1,11,17,2
