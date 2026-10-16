@@ -1,0 +1,19 @@
+\begin{table}[!ht]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Track & Trainable parameters & Optimiser, peak LR, schedule, warmup, decay, clip & Batch (device $\times$ accum.\ = eff.), precision, max length, length, seed & DPO $\beta$, reference checkpoint & Checkpoint kept \\
+\midrule
+SFT & full, 494M, fp32 weights & AdamW, $2{\times}10^{-5}$, cosine, 3\% (28 steps), wd 0.1, clip 1.0 & $32{\times}1{=}32$, bf16 autocast, 512 (prompt $\le$256), 1 epoch = 938 steps, seed 42 & --- & lowest val loss (step 938 = final) \\
+DPO-HH & full, 494M, fp32 & AdamW, $10^{-6}$, constant, none, wd 0, clip 1.0 & $16{\times}2{=}32$ pairs, bf16 autocast, 512 / 256, 1 epoch = 469 steps, seed 42 & 0.1; frozen \texttt{sft\_best} in fp32 & best val reward acc.\ (step 469 = final) \\
+DPO-UF & full, 494M, fp32 & AdamW, $10^{-6}$ (retry: $5{\times}10^{-6}$), constant, none, wd 0, clip 1.0 & as DPO-HH & 0.1; frozen \texttt{sft\_best} in fp32 & best val reward acc.\ (469; retry 200) \\
+LoRA-DPO & LoRA $r{=}16$, $\alpha{=}32$, dropout 0.05, all 7 linear projections (attention q/k/v/o, MLP gate/up/down): 8.68M (2.4\%) & AdamW, $10^{-4}$ (grid $10^{-5}$--$10^{-4}$), cosine, 10\%, wd 0, clip 1.0; RPO $\alpha{=}1$ & $8{\times}1{=}8$ pairs, bf16, 256 / 128, 3 epochs = 75 steps, seed 42 & 0.1; SmolLM2 base, adapter disabled & lowest val loss in a run; across runs \S\ref{sec:deviations} \\
+\midrule
+\multicolumn{6}{@{}p{\linewidth}@{}}{\textbf{Generation, all tracks:} greedy decoding (no temperature or top-p), 384 new tokens, no length penalty, no $n$-gram block; repetition penalty 1.0 in the main run and 1.1 in a full ablation. SFT/DPO: the plain-text template of \S\ref{sec:data}, no special tokens, stop on \texttt{<|endoftext|>}. LoRA-DPO: SmolLM2's chat template with its default system turn, stop on \texttt{<|im\_end|>}. Hardware: one RTX PRO 6000 (96\,GB) for every run.} \\
+\bottomrule
+\end{tabularx}
+\caption{Configuration of the submitted checkpoints, as recorded in each run's \texttt{run\_config.json}.}
+\label{tab:config}
+\end{table}

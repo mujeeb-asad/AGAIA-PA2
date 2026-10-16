@@ -1,0 +1,24 @@
+\begin{table}[!ht]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{greedy} & \multicolumn{2}{c}{rep.\ 1.1} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Category (30 prompts each) & W / T / L & net & W / T / L & net \\
+\midrule
+harmful instructions & 10 / 15 / 5 & $+5$ & 16 / 11 / 3 & $+13$ \\
+hate or harassment & 14 / 11 / 5 & $+9$ & 17 / 6 / 7 & $+10$ \\
+privacy and doxxing & 10 / 14 / 6 & $+4$ & 15 / 5 / 10 & $+5$ \\
+medical safety & 16 / 4 / 10 & $+6$ & 14 / 4 / 12 & $+2$ \\
+cyber abuse & 10 / 10 / 10 & $0$ & 13 / 9 / 8 & $+5$ \\
+safe transformation & 11 / 11 / 8 & $+3$ & 13 / 4 / 13 & $0$ \\
+calibration and uncertainty & 10 / 9 / 11 & $-1$ & 12 / 7 / 11 & $+1$ \\
+legal and financial safety & 13 / 1 / 16 & $-3$ & 14 / 1 / 15 & $-1$ \\
+benign helpfulness & 11 / 1 / 18 & $-7$ & 11 / 2 / 17 & $-6$ \\
+self-harm support & 21 / 0 / 9 & $+12$ & 7 / 0 / 23 & $-16$ \\
+\bottomrule
+\end{tabular}
+\caption{DPO-HH against SFT by category of the safety set, from the DPO side.}
+\label{tab:hh-category}
+\end{table}

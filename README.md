@@ -15,8 +15,9 @@ how the implementation was shaped to meet it, what we expected to happen, what a
 the two differ. Measured observations and our interpretation of them are kept apart throughout. A sentence that
 interprets says so ("we read this as", "the likely reason").
 
-> **Status.** Every run and every judged comparison is final: 2,440 verdicts in all (6 DPO-vs-SFT comparisons × 300
-> pairs, and 16 persona-vs-base comparisons × 40 pairs, each persona pair judged on style and on quality).
+> **Status.** Every run and every judged comparison is final: 2,440 judged pairs (6 DPO-vs-SFT comparisons × 300
+> pairs and 16 persona-vs-base comparisons × 40 pairs). Each persona pair gets two verdicts, style and quality, so that
+> makes 3,080 verdicts in all.
 
 ---
 
@@ -70,7 +71,7 @@ twice against the base model's answer:
 | Quality (helpful, correct, safe) | 22 / 1 / 17 | 56.3% | 0.52 |
 | Quality on the 10 safety-sensitive prompts | 8 / 0 / 2 | 80.0% | |
 
-No judge call failed, no verdict was unparseable, and no batch needed a retry in any of the 2,440 verdicts.
+No judge call failed, no verdict was unparseable, and no batch needed a retry across all 2,440 judged pairs (3,080 verdicts).
 
 **In one paragraph.** DPO on HH-RLHF pairs gave a small edge over SFT on the safety set: 54.7% under greedy decoding.
 That is just short of conventional significance, and it concentrates in the harmful-request and hate/harassment
@@ -97,7 +98,7 @@ exactly the two emotional-vulnerability prompts, where it insults the person ins
 | Task 5 | TRL `DPOTrainer` + LoRA on the persona data, justified LoRA choices, "more stylistically faithful without becoming less useful or less safe?" | `persona/persona.ipynb`, run by `persona/run_persona_modal.py` |
 | Task 6 | A sanity check on a few prompts, then full generation, then blinded pair files with randomised order | `generate/generate.ipynb`, run by `generate/run_generate_modal.py` |
 | Task 7 | Resumable, batched, rate-limited judging with retries, failure logs and summaries | `judge/judge.ipynb` (a Kaggle Benchmarks notebook), outputs in `judge/kaggle_run/` |
-| Task 8 | The report, plus training plots and an evaluation summary | the report PDF, `summary/summary.ipynb` → `summary/outputs/summary/`, and this README |
+| Task 8 | The report, plus training plots and an evaluation summary | `report/pa2_report.pdf` (source `report/pa2_report.tex`, figures from `report/make_figures.py`), `summary/summary.ipynb` → `summary/outputs/summary/`, and this README |
 | §4.1 | A root-level `submission_adapter.py` with six fixed signatures, wired to our own code | `submission_adapter.py` |
 | §4.2 | The public tests pass | `tests/test_public_adapter_smoke.py` (7 tests) plus our own `tests/test_core_edge_cases.py` (12) and `tests/test_data.py` (4): all 23 pass |
 
@@ -110,8 +111,11 @@ The from-scratch code (SFT and both DPO runs) uses only PyTorch and Transformers
 ## 3. Reproducing everything
 
 Every GPU stage is a notebook. A small Modal runner beside each one executes it with papermill on a single
-RTX PRO 6000, writing into a persistent volume. The notebooks' own constants are the manual's Kaggle guide values, so
-each one also runs unchanged in a Kaggle T4×2 notebook. The runners only override what a 96 GB card changes (§14).
+RTX PRO 6000, writing into a persistent volume. The setup, training and generation notebooks keep the manual's Kaggle
+guide values as their defaults (fp16, 2 × 16 and 1 × 32 batch layouts, a second GPU for the reference), so on a Kaggle
+T4×2 notebook they only need their input paths pointed at the attached datasets. The persona notebook defaults to bf16,
+which a T4 does not support, so it needs `PRECISION = 'fp32'` there. The runners only override what a 96 GB card
+changes (§14).
 
 ```bash
 pip install -r requirements.txt && pip install -e . --no-deps    # local, cpu only: tests, subset check, summary
@@ -147,9 +151,11 @@ rebuilt from the official prompt file is byte-identical to the committed one.
 ## 4. Compute environment (Task 1)
 
 The manual's environment is a Kaggle notebook with two T4s. Every reported number here comes from one
-NVIDIA RTX PRO 6000 Blackwell Server Edition (96 GB) on Modal. The manual allows this ("guide configurations, not
-sacred hyperparameters") on condition that the change is documented. It is the largest deviation in the project and
-is purely resource-driven: it changes no part of the method, only how fast it runs and which precision suits the card.
+NVIDIA RTX PRO 6000 Blackwell Server Edition (96 GB) on Modal. This departs from the manual, which describes running
+the experiments on Kaggle T4s, so it is reported here as a documented, resource-driven deviation (§14.2). It is the
+largest deviation in the project. It changes no part of the method, only how fast it runs and which precision suits
+the card. The setup, training and generation notebooks keep the guide values as their defaults, so they also run on
+Kaggle T4×2 (§3).
 
 `setup/setup.ipynb` performs Task 1 literally. It clones the pushed GitHub repository fresh and installs the manual's
 dependency line, recording the torch version before and after to prove torch was not reinstalled. It installs the repo
@@ -555,7 +561,7 @@ complying with a harmful request is worse than declining with a safe alternative
 - **Failed.** A batch that fails all 3 attempts stays unjudged, is logged, and is retried by the next run.
 - **Identical answers.** Pairs with identical answers are recorded as ties without spending a judge call.
 
-In all 2,440 verdicts there were 0 unknown, 0 failed and 0 retries.
+Across all 2,440 judged pairs (3,080 verdicts, since persona pairs get two) there were 0 unknown, 0 failed and 0 retries.
 
 **Position bias.** Because A/B order is a fair coin per pair, any share of decisive verdicts far from 50% for position A
 is the judge's own preference, not a model effect:
@@ -1022,10 +1028,10 @@ context lengths, effective batches and selection rules.
 ## 16. Limitations
 
 - **One judge model, one order.** Every verdict comes from `gemini-3.6-flash`, with a measurable preference for
-  position A (53–60%). Each pair was judged once, in one order. Swapping orders would cancel the position bias, and a
+  position A (48–60% of decisive verdicts across the six DPO comparisons). Each pair was judged once, in one order. Swapping orders would cancel the position bias, and a
   second judge would show how much of each result is judge-specific.
-- **Small evaluation sets, single seed.** At 300 pairs, a 95% interval is about ±5 points of win rate. Every headline
-  difference here is within about ±5 points of 50%. Category results rest on 30 prompts, and the persona results on 40.
+- **Small evaluation sets, single seed.** At 300 pairs, a 95% interval is about ±5 points of win rate. All four main
+  DPO-vs-SFT results lie within about ±5 points of 50%; only the UF retry (35.5%, 38.8%) is clearly separated. Category results rest on 30 prompts, and the persona results on 40.
   Each model was trained once, with seed 42, so seed-to-seed variance is unmeasured. For a borderline result like
   DPO-HH's 54.7%, that variance could matter.
 - **Automatic heuristics.** The loop count (a regex on the tail plus a full-budget check), the refusal count (keyword

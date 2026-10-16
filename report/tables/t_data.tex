@@ -1,0 +1,19 @@
+\begin{table}[!ht]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}Xr>{\raggedright\arraybackslash}X@{}}
+\toprule
+Track & Training data (split) & Train / val & Evaluation set \\
+\midrule
+SFT & \texttt{ultrachat\_200k} (\texttt{train\_sft}), first user$\to$assistant turn & 30{,}000 / 1{,}000 & --- \\
+DPO-HH & \texttt{Anthropic/hh-rlhf} (\texttt{train}), single-turn transcripts & 15{,}000 / 1{,}000 & helpful/harmless set: 300 prompts, 10 categories \\
+DPO-UF & \texttt{ultrafeedback\_binarized} (\texttt{train\_prefs}) & 15{,}000 / 1{,}000 & AlpacaEval: 300 of 805, seed 42 \\
+LoRA-DPO & \texttt{ramsay\_style\_preferences.json} (provided) & 200 / 20 & persona set: 40 prompts, 4 categories \\
+\bottomrule
+\end{tabularx}
+\caption{Data. Each subset is the first $n$ rows of a seed-42 shuffle that pass the filters, validation rows following
+the training rows, so the two never overlap. Base checkpoints: \texttt{Qwen/Qwen2.5-0.5B} \citep{qwen2024qwen25} for
+the first three tracks, \texttt{HuggingFaceTB/SmolLM2-360M-Instruct} \citep{allal2025smollm2} for LoRA-DPO.}
+\label{tab:data}
+\end{table}

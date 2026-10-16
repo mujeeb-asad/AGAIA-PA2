@@ -1,0 +1,21 @@
+\begin{table}[!ht]
+\centering
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+& & \multicolumn{3}{c}{greedy} & \multicolumn{3}{c}{rep.\ penalty 1.1} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Eval set & Model & stops (\%) & tokens & loops & stops (\%) & tokens & loops \\
+\midrule
+alpaca & Qwen2.5-0.5B base & 65.0 & 223 & 40 & 72.7 & 246 & 3 \\
+alpaca & SFT & 79.0 & 198 & 17 & 89.7 & 187 & 2 \\
+alpaca & DPO-UF & 68.3 & 247 & 27 & 84.3 & 231 & 3 \\
+alpaca & DPO-UF $5{\times}10^{-6}$ & 45.7 & 309 & 35 & 62.7 & 292 & 5 \\
+hh & SFT & 83.3 & 199 & 18 & 98.3 & 170 & 2 \\
+hh & DPO-HH & 90.7 & 165 & 18 & 98.3 & 144 & 3 \\
+\bottomrule
+\end{tabular}
+\caption{Generation on the 300 evaluation prompts. ``Stops'': answer ends with EOS before 384 tokens. ``Loops'':
+answer uses the whole budget and its tail repeats one passage at least three times.}
+\label{tab:generation}
+\end{table}
