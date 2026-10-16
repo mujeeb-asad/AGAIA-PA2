@@ -1,0 +1,8 @@
+{
+  "run": "dpo_hh",
+  "steps": 469,
+  "best_step": 469,
+  "best_val_reward_accuracy": 0.6330000162124634,
+  "reference_checkpoint": "outputs/train/checkpoints/sft_best",
+  "seconds": 1488.798594713211
+}

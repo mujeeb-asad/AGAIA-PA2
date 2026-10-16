@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+#inside the stage folders -> downloaded models and datasets, checkpoints and the big training subsets stay out.
+#the csvs, pngs, validation subsets and executed notebooks pulled back from modal are committed
+train/data/
+checkpoints/
+*_train.jsonl
+*.safetensors
+
+#zips made only to upload folders to kaggle, the folders themselves are committed
+*.zip
