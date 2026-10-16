@@ -102,6 +102,25 @@ exactly the two emotional-vulnerability prompts, where it insults the person ins
 | §4.1 | A root-level `submission_adapter.py` with six fixed signatures, wired to our own code | `submission_adapter.py` |
 | §4.2 | The public tests pass | `tests/test_public_adapter_smoke.py` (7 tests) plus our own `tests/test_core_edge_cases.py` (12) and `tests/test_data.py` (4): all 23 pass |
 
+**Layout.** One folder per stage. Each holds its notebook, the Modal runner that executes it, and under `modal_run/` (or
+`kaggle_run/` for the judge) the executed notebook and every output it wrote:
+
+```text
+alignment/            from-scratch batching, masking, log-probabilities, SFT and DPO losses
+submission_adapter.py the six grading signatures, thin wrappers over alignment/
+tests/                7 public + 12 edge-case + 4 data tests
+data/persona_lora/    the provided persona preference pairs
+eval_sets/            the three fixed evaluation sets and the AlpacaEval subset builder
+setup/                Task 1: environment check (notebook, runner, executed run)
+train/                Tasks 3-4: SFT and both DPO runs (+ the UF learning-rate retry)
+generate/             Tasks 2 and 6: answers and blinded pair files, greedy and repetition penalty 1.1
+persona/              Task 5: TRL DPOTrainer + LoRA grid, selection, persona answers and pair files
+judge/                Task 7: the Kaggle Benchmarks judge notebook and every verdict
+summary/              combined tables and figures over all of the above
+report/               Task 8: the 8-page report (LaTeX source, tables, figure script, PDF)
+docs/                 the assignment manual
+```
+
 The from-scratch code (SFT and both DPO runs) uses only PyTorch and Transformers model loading. No Hugging Face
 `Trainer`, no TRL and no prebuilt loop, which is the manual's library boundary. TRL and PEFT appear only in
 `persona/`, where the manual requires them.
@@ -758,7 +777,7 @@ model itself, through the adapter disabled, which is how TRL handles a PEFT mode
 
 ### 13.2 What happened: over-optimization in its plainest form
 
-The plain-DPO half of the grid (`persona_pilot.csv`, `persona_training.png`):
+The plain-DPO half of the grid (`persona_pilot.csv`, and the figure below):
 
 | LR | best val DPO loss | val reward accuracy | val margin | val answers stopping on their own (greedy) | "!" per answer |
 |---|---|---|---|---|---|
@@ -1084,7 +1103,7 @@ context lengths, effective batches and selection rules.
 | Validation subsets | `train/modal_run/outputs/train/subsets/{sft,hh,uf}_val.jsonl` |
 | Executed training notebooks | `train/modal_run/train_executed.ipynb`, `train_dpo_uf_lr5e-6_executed.ipynb` |
 | Generations, pair files, generation configs | `generate/modal_run/outputs/{generate,generate_rep1.1,generate_dpo_uf_lr5e-6,generate_rep1.1_dpo_uf_lr5e-6}/` |
-| Persona configs, pilot, histories, plot | `persona/modal_run/outputs/persona/{run_config.json,persona_pilot.csv,*_history.csv,persona_training.png,split.json}` |
+| Persona configs, pilot, histories, plot | `persona/modal_run/outputs/persona/{run_config.json,persona_pilot.csv,*_history.csv,split.json}`; the training plot is drawn from these histories as `summary/outputs/summary/persona_training.png` |
 | Persona answers, selection, pair files | `persona/modal_run/outputs/persona/{generate,generate_rep1.1}/` |
 | Judged verdicts and judge summaries | `judge/kaggle_run/outputs/judge/{greedy,rep1.1,persona,persona_rep1.1}/`, `judge_summary.csv`, `judge_by_category_{hh_eval,persona_eval}.csv` |
 | Executed judge notebook | `judge/kaggle_run/judge_executed.ipynb` |

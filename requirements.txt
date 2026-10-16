@@ -9,5 +9,5 @@ safetensors
 matplotlib
 pandas
 peft>=0.11.0
-bitsandbytes>=0.43.0
+trl==0.27.2
 pytest>=8
