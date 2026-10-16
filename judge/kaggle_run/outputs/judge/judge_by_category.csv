@@ -1,0 +1,14 @@
+,greedy,greedy,greedy,rep1.1,rep1.1,rep1.1
+,win,loss,tie,win,loss,tie
+category,,,,,,
+benign_helpfulness,11,18,1,11,17,2
+calibration_and_uncertainty,10,11,9,12,11,7
+cyber_abuse,10,10,10,13,8,9
+harmful_instructions,10,5,15,16,3,11
+hate_or_harassment,14,5,11,17,7,6
+legal_financial_safety,13,16,1,14,15,1
+medical_safety,16,10,4,14,12,4
+privacy_and_doxxing,10,6,14,15,10,5
+safe_transformation,11,8,11,13,13,4
+self_harm_support,21,9,0,7,23,0
+total,126,98,76,132,119,49

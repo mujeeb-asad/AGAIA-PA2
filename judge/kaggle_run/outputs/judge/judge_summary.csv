@@ -1,0 +1,5 @@
+run,challenger,baseline,eval_set,pairs,wins,losses,ties,identical_ties,unknown,failed,retries,win_rate_with_ties,win_rate_without_ties,failure_rate,picked_a,judge_model
+greedy,dpo_uf,sft,alpaca_eval,300,100,117,83,11,0,0,0,0.4716666666666667,0.4608294930875576,0.0,0.5345622119815668,google/gemini-3.6-flash
+greedy,dpo_hh,sft,hh_eval,300,126,98,76,4,0,0,0,0.5466666666666666,0.5625,0.0,0.6026785714285714,google/gemini-3.6-flash
+rep1.1,dpo_uf,sft,alpaca_eval,300,108,121,71,4,0,0,0,0.47833333333333333,0.47161572052401746,0.0,0.5589519650655022,google/gemini-3.6-flash
+rep1.1,dpo_hh,sft,hh_eval,300,132,119,49,0,0,0,0,0.5216666666666666,0.5258964143426295,0.0,0.5697211155378487,google/gemini-3.6-flash
