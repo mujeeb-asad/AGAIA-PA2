@@ -98,7 +98,7 @@ exactly the two emotional-vulnerability prompts, where it insults the person ins
 | Task 5 | TRL `DPOTrainer` + LoRA on the persona data, justified LoRA choices, "more stylistically faithful without becoming less useful or less safe?" | `persona/persona.ipynb`, run by `persona/run_persona_modal.py` |
 | Task 6 | A sanity check on a few prompts, then full generation, then blinded pair files with randomised order | `generate/generate.ipynb`, run by `generate/run_generate_modal.py` |
 | Task 7 | Resumable, batched, rate-limited judging with retries, failure logs and summaries | `judge/judge.ipynb` (a Kaggle Benchmarks notebook), outputs in `judge/kaggle_run/` |
-| Task 8 | The report, plus training plots and an evaluation summary | `report/pa2_report.pdf` (source `report/pa2_report.tex`, figures from `report/make_figures.py`), `summary/summary.ipynb` → `summary/outputs/summary/`, and this README |
+| Task 8 | The report, plus training plots and an evaluation summary | `report/pa2_report_27100095.pdf` (source `report/pa2_report.tex`, figures from `report/make_figures.py`), `summary/summary.ipynb` → `summary/outputs/summary/`, and this README |
 | §4.1 | A root-level `submission_adapter.py` with six fixed signatures, wired to our own code | `submission_adapter.py` |
 | §4.2 | The public tests pass | `tests/test_public_adapter_smoke.py` (7 tests) plus our own `tests/test_core_edge_cases.py` (12) and `tests/test_data.py` (4): all 23 pass |
 
